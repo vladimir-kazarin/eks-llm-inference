@@ -50,7 +50,7 @@ routerSpec:
   tag: v0.1.13
   imagePullPolicy: IfNotPresent
   # Changed by scripts/set-strategy.sh: roundrobin | session | prefixaware
-  routingLogic: session
+  routingLogic: prefixaware
   sessionKey: x-session-id
   # Router imports torch at startup (~20-30s on t3.large); chart default allows only ~20s.
   startupProbe:
