@@ -1,0 +1,11 @@
+{
+  "label": "prefixaware",
+  "requests": 180,
+  "prompt_tokens": 2284726,
+  "cached_tokens": 1874816,
+  "cache_hit_pct": 82.05868012181767,
+  "ttft_p50_ms": 564.1,
+  "ttft_p95_ms": 8993.0,
+  "output_tok_per_s": 33.12684184620838,
+  "wall_s": 152.17267083300248
+}

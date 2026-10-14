@@ -1,0 +1,11 @@
+{
+  "label": "session",
+  "requests": 180,
+  "prompt_tokens": 2287199,
+  "cached_tokens": 2145936,
+  "cache_hit_pct": 93.82375560674869,
+  "ttft_p50_ms": 511.6,
+  "ttft_p95_ms": 814.5,
+  "output_tok_per_s": 63.23182548301955,
+  "wall_s": 81.73099480399833
+}

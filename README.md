@@ -52,9 +52,19 @@ Full session including benchmarks: [docs/runbook.md](docs/runbook.md).
 
 ## Results
 
-Local baseline (two replicas, hand-written gateway): round-robin routing hit the
-prefix cache on 18% of prompt tokens; pinning sessions to replicas raised that to
-60% and cut median time-to-first-token from 1.3 s to 0.4 s. EKS numbers:
+6 concurrent agent sessions × 30 turns, contexts growing to ~23k tokens,
+2× g5.xlarge running Qwen3-4B:
+
+| routing | cache hit | TTFT p50 | TTFT p95 | output tok/s |
+|---|---|---|---|---|
+| round-robin | 64.2% | 681 ms | 14.5 s | 31.8 |
+| session affinity | **93.8%** | **512 ms** | **0.8 s** | **63.2** |
+| prefix-aware | 82.1% | 564 ms | 9.0 s | 33.1 |
+
+Session affinity keeps each conversation's KV cache on one GPU: an 18× shorter
+tail and 2× the throughput. Round-robin duplicates every session on both GPUs
+and overflows the cache. Prefix-aware routing piled 80% of the load onto one
+engine because all sessions share a prompt preamble. Full analysis:
 [docs/results.md](docs/results.md).
 
 ## Monitoring

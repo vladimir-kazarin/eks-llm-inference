@@ -1,0 +1,11 @@
+{
+  "label": "roundrobin",
+  "requests": 180,
+  "prompt_tokens": 2282472,
+  "cached_tokens": 1464880,
+  "cache_hit_pct": 64.17953867561135,
+  "ttft_p50_ms": 681.2,
+  "ttft_p95_ms": 14540.1,
+  "output_tok_per_s": 31.798451300985974,
+  "wall_s": 153.5923857980015
+}
