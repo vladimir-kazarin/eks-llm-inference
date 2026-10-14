@@ -54,3 +54,4 @@ test:
 	uv run pytest -q
 	bash scripts/tests/test_lib.sh
 	bash scripts/tests/test_down_refuses_with_lb.sh
+	bash scripts/tests/test_down_refuses_unreachable.sh

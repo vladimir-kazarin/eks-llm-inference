@@ -65,4 +65,4 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: shellcheck scripts/*.sh scripts/tests/*.sh
-      - run: bash scripts/tests/test_lib.sh && bash scripts/tests/test_down_refuses_with_lb.sh
+      - run: bash scripts/tests/test_lib.sh && bash scripts/tests/test_down_refuses_with_lb.sh && bash scripts/tests/test_down_refuses_unreachable.sh

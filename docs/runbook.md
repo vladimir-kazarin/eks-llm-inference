@@ -9,7 +9,9 @@
   aws service-quotas get-service-quota --service-code ec2 \
     --quota-code L-DB2E81BA --region us-east-1 --query Quota.Value
   ```
-- The repo pushed to GitHub — Argo CD deploys from `origin/main`, not your laptop.
+- The repo pushed to GitHub — Argo CD deploys `origin/main` (override with
+  `GITOPS_REVISION`), not your laptop. `make up` and `make strategy` refuse to run
+  if `HEAD` isn't on that branch.
 
 ## 2. One-time bootstrap
 
@@ -60,5 +62,6 @@ UIs: `make grafana` (http://localhost:3000), `make argocd` (http://localhost:808
 | vLLM OOM at startup | Lower `maxModelLen` or `gpuMemoryUtilization` in `values.yaml`. |
 | Engine pods Pending | Toleration for `nvidia.com/gpu`, node label `workload=llm`, `kubectl -n llm describe pod`. |
 | `make bench` says router strategy mismatch | `make strategy S=<name>`; check `kubectl -n argocd get app llm-stack`. |
+| `make down`: "cannot reach the cluster API" | Your public IP changed since `make up`. Run `make up` again (re-applies `allowed_cidrs`, restores Argo auto-sync), then `make down`. |
 | `make down` stuck on LoadBalancer | `kubectl -n kube-system logs deploy/aws-load-balancer-controller`. |
 | Grafana password | `kubectl -n monitoring get secret kube-prometheus-stack-grafana -o jsonpath='{.data.admin-password}' \| base64 -d` |

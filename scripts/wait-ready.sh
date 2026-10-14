@@ -35,7 +35,8 @@ endpoint_serving() { local e; e=$(endpoint) && curl -fsS --max-time 5 "$e/v1/mod
 
 poll 1200 15 "4 Ready nodes" nodes_ready
 poll 600 15 "GPU allocatable on both GPU nodes" gpus_allocatable
-poll 900 20 "2 vLLM engine pods Ready" engines_ready
+# First sync: Argo retry backoff + multi-GB image pull + ~8 GB weights + CUDA graph capture.
+poll 1800 20 "2 vLLM engine pods Ready" engines_ready
 poll 900 20 "Argo CD apps Synced/Healthy" apps_healthy
 poll 600 15 "NLB serving /v1/models" endpoint_serving
 log "ready"

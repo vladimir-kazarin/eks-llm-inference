@@ -12,8 +12,12 @@ esac
 STUB
 cat > "$STUBS/terraform" <<'STUB'
 #!/usr/bin/env bash
-if [[ "$*" == *destroy* ]]; then echo "DESTROY CALLED" >&2; exit 99; fi
-echo llm-inference
+case "$*" in
+  *destroy*) echo "DESTROY CALLED" >&2; exit 99;;
+  *configure_kubectl*) echo ":";;
+  *state_bucket*) echo test-bucket;;
+  *) echo llm-inference;;
+esac
 STUB
 printf '#!/usr/bin/env bash\nexit 0\n' > "$STUBS/aws"
 chmod +x "$STUBS"/*

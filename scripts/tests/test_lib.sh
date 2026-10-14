@@ -24,16 +24,39 @@ chmod +x "$STUBS/kubectl"
 # shellcheck disable=SC2016  # single quotes intended: check() evals the string
 check "router_strategy extracts value" '[ "$(router_strategy)" = prefixaware ]'
 
-# require_pushed: fails when HEAD is not on any remote branch
-cat > "$STUBS/git" <<'STUB'
+# require_pushed: Argo deploys origin/$GITOPS_REVISION, so HEAD must be on that branch
+write_git_stub() {  # $1 = exit code of `merge-base --is-ancestor`, $2 = current branch
+  cat > "$STUBS/git" <<STUB
 #!/usr/bin/env bash
-case "$*" in
+case "\$*" in
   *"fetch --quiet origin") exit 0;;
-  *"rev-parse HEAD") echo aaa;;
-  *"branch -r --contains aaa") echo "";;
+  *"merge-base --is-ancestor HEAD origin/main") exit $1;;
+  *"rev-parse --abbrev-ref HEAD") echo $2;;
+  *) exit 1;;
 esac
 STUB
-chmod +x "$STUBS/git"
-check "require_pushed fails on unpushed HEAD" "! (require_pushed) >/dev/null 2>&1"
+  chmod +x "$STUBS/git"
+}
+write_git_stub 1 main
+check "require_pushed fails when HEAD not on origin/main" "! (require_pushed) >/dev/null 2>&1"
+write_git_stub 0 main
+check "require_pushed passes when HEAD on origin/main" "(require_pushed) >/dev/null 2>&1"
+write_git_stub 0 feat/x
+check "require_on_revision_branch fails off main" "! (require_on_revision_branch) >/dev/null 2>&1"
+write_git_stub 0 main
+check "require_on_revision_branch passes on main" "(require_on_revision_branch) >/dev/null 2>&1"
+
+# lb_service_count must fail (not report 0) when the cluster is unreachable
+printf '#!/usr/bin/env bash\nexit 1\n' > "$STUBS/kubectl"; chmod +x "$STUBS/kubectl"
+check "lb_service_count fails when kubectl fails" "! (lb_service_count) >/dev/null 2>&1"
+
+# restore_root_sync re-enables automated sync that a partial 'make down' disabled
+cat > "$STUBS/kubectl" <<STUB
+#!/usr/bin/env bash
+echo "\$*" >> "$STUBS/kubectl.log"
+STUB
+chmod +x "$STUBS/kubectl"
+check "restore_root_sync patches automated policy" \
+  "restore_root_sync >/dev/null 2>&1 && grep -q 'patch application root.*automated' '$STUBS/kubectl.log'"
 
 echo "lib tests: $pass passed, $failed failed"; [ "$failed" -eq 0 ]
