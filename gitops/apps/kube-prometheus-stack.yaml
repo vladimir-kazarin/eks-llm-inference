@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters: {}
+  template:
+    metadata:
+      name: kube-prometheus-stack
+      finalizers: [resources-finalizer.argocd.argoproj.io]
+    spec:
+      project: default
+      source:
+        repoURL: https://prometheus-community.github.io/helm-charts
+        chart: kube-prometheus-stack
+        targetRevision: 92.7.0
+        helm:
+          releaseName: kube-prometheus-stack
+          valuesObject:
+            prometheus:
+              prometheusSpec:
+                serviceMonitorSelectorNilUsesHelmValues: false
+                nodeSelector: { workload: system }
+            grafana:
+              nodeSelector: { workload: system }
+              sidecar:
+                dashboards:
+                  searchNamespace: ALL
+            alertmanager:
+              enabled: false
+      destination:
+        server: '{{ .server }}'
+        namespace: monitoring
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]
+        retry:
+          limit: 10
+          backoff: { duration: 30s, factor: 2, maxDuration: 5m }

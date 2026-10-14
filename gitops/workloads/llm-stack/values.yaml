@@ -1,0 +1,64 @@
+# vLLM production-stack (chart vllm-stack 0.1.13). Two Qwen3-4B replicas, one per g5.xlarge.
+servingEngineSpec:
+  # AL2023 NVIDIA AMI uses the NVIDIA runtime by default; no RuntimeClass object exists.
+  runtimeClassName: ""
+  modelSpec:
+    - name: qwen3-4b
+      repository: vllm/vllm-openai
+      tag: v0.31.0
+      modelURL: Qwen/Qwen3-4B
+      replicaCount: 2
+      requestCPU: 2
+      requestMemory: 10Gi
+      requestGPU: 1
+      runtimeClassName: ""
+      vllmConfig:
+        enablePrefixCaching: true
+        maxModelLen: 32768
+        dtype: bfloat16
+        maxNumSeqs: 32
+        gpuMemoryUtilization: 0.90
+      lmcacheConfig:
+        enabled: false
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: workload
+              operator: In
+              values: [llm]
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+  # Weight download (~8 GB) + load: allow up to 15 min.
+  startupProbe:
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    failureThreshold: 90
+    httpGet:
+      path: /health
+      port: 8000
+  serviceMonitor:
+    enabled: true
+
+routerSpec:
+  repository: lmcache/lmstack-router
+  tag: v0.1.13
+  imagePullPolicy: IfNotPresent
+  # Changed by scripts/set-strategy.sh: roundrobin | session | prefixaware
+  routingLogic: roundrobin
+  sessionKey: x-session-id
+  serviceType: LoadBalancer
+  serviceAnnotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: external
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+  nodeSelectorTerms:
+    - matchExpressions:
+        - key: workload
+          operator: In
+          values: [system]
+  serviceMonitor:
+    enabled: true
+
+grafanaDashboards:
+  enabled: true

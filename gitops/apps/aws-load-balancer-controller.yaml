@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: aws-load-balancer-controller
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters: {}
+  template:
+    metadata:
+      name: aws-load-balancer-controller
+      finalizers: [resources-finalizer.argocd.argoproj.io]
+    spec:
+      project: default
+      source:
+        repoURL: https://aws.github.io/eks-charts
+        chart: aws-load-balancer-controller
+        targetRevision: 3.6.0
+        helm:
+          releaseName: aws-load-balancer-controller
+          valuesObject:
+            clusterName: '{{ .metadata.annotations.cluster_name }}'
+            region: '{{ .metadata.annotations.aws_region }}'
+            vpcId: '{{ .metadata.annotations.vpc_id }}'
+            serviceAccount:
+              name: aws-load-balancer-controller
+            nodeSelector:
+              workload: system
+      destination:
+        server: '{{ .server }}'
+        namespace: kube-system
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        retry:
+          limit: 10
+          backoff: { duration: 30s, factor: 2, maxDuration: 5m }
