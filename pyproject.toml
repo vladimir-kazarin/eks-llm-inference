@@ -17,3 +17,5 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM"]
+# str.split() on a word-list literal is the readable idiom here.
+ignore = ["SIM905"]
