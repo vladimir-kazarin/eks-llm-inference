@@ -4,6 +4,8 @@ STRATEGY ?= roundrobin
 SESSIONS ?= 6
 TURNS ?= 30
 CONTEXT ?= 28000
+GRAFANA_PORT ?= 3000
+ARGOCD_PORT ?= 8080
 
 .PHONY: bootstrap up down endpoint demo strategy bench report grafana argocd lint test
 
@@ -35,10 +37,10 @@ report:
 	uv run python -m clients.report results
 
 grafana:
-	kubectl -n monitoring port-forward svc/kube-prometheus-stack-grafana 3000:80
+	kubectl -n monitoring port-forward svc/kube-prometheus-stack-grafana $(GRAFANA_PORT):80
 
 argocd:
-	kubectl -n argocd port-forward svc/argocd-server 8080:80
+	kubectl -n argocd port-forward svc/argocd-server $(ARGOCD_PORT):80
 
 lint:
 	terraform fmt -check -recursive terraform

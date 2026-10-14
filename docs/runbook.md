@@ -43,6 +43,7 @@ it. `make bench` refuses to run if the live router's strategy doesn't match
 `STRATEGY`.
 
 UIs: `make grafana` (http://localhost:3000), `make argocd` (http://localhost:8080).
+If a port is taken locally: `make grafana GRAFANA_PORT=3001`, `make argocd ARGOCD_PORT=8081`.
 
 ## 4. Live verification checklist
 
