@@ -1,0 +1,17 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.tfstate.lock.info
+crash.log
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+# Local
+kubeconfig*
+results/*.csv
+.env
