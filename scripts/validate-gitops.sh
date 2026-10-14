@@ -28,6 +28,9 @@ grep -q -- '- "--enable-prefix-caching"' "$TMP/llm.yaml" || fail "engine prefix 
 grep -q -- '- "--enable-prompt-tokens-details"' "$TMP/llm.yaml" || fail "engine must report cached_tokens (--enable-prompt-tokens-details)"
 # 2 replicas on exactly 2 GPUs: a surge rollout would leave new pods Pending forever.
 awk '/name: "llm-qwen3-4b-deployment-vllm"/{f=1} f&&/strategy:/{getline; print; exit}' "$TMP/llm.yaml" | grep -q 'type: Recreate' || fail "engine Deployment must use Recreate strategy"
+# Router imports torch at startup (~20-30s on t3.large); the chart default probe allows ~20s.
+router_threshold=$(awk '/name: "llm-deployment-router"/{f=1} f&&/startupProbe:/{s=1} s&&/failureThreshold:/{print $2; exit}' "$TMP/llm.yaml")
+[ "${router_threshold:-0}" -ge 24 ] || fail "router startupProbe failureThreshold ${router_threshold:-unset} < 24 (2 min)"
 grep -q 'SkipDryRunOnMissingResource=true' "$ROOT/gitops/apps/llm-stack.yaml" || fail "llm-stack must not block on missing ServiceMonitor CRD"
 grep -q 'image: "vllm/vllm-openai:v0.31.0"' "$TMP/llm.yaml" || fail "engine image not pinned to v0.31.0"
 if grep -q 'runtimeClassName' "$TMP/llm.yaml"; then fail "runtimeClassName must not be set"; fi

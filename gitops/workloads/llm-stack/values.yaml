@@ -52,6 +52,11 @@ routerSpec:
   # Changed by scripts/set-strategy.sh: roundrobin | session | prefixaware
   routingLogic: roundrobin
   sessionKey: x-session-id
+  # Router imports torch at startup (~20-30s on t3.large); chart default allows only ~20s.
+  startupProbe:
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    failureThreshold: 36
   serviceType: LoadBalancer
   serviceAnnotations:
     service.beta.kubernetes.io/aws-load-balancer-type: external
