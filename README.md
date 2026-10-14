@@ -57,6 +57,24 @@ prefix cache on 18% of prompt tokens; pinning sessions to replicas raised that t
 60% and cut median time-to-first-token from 1.3 s to 0.4 s. EKS numbers:
 [docs/results.md](docs/results.md).
 
+## Monitoring
+
+kube-prometheus-stack scrapes the router and both vLLM engines; the
+production-stack dashboards ship as ConfigMaps through Argo CD (`make grafana`).
+
+![vLLM Grafana dashboard during a round-robin benchmark](docs/images/grafana-vllm-dashboard.png)
+
+During a round-robin run of the long-context agent benchmark:
+
+- **Request TTFT distribution** is bimodal. Most requests land at 0.25–0.75 s,
+  because the replica still had most of the session's prefix cached. A tail runs
+  out to 10–20 s: those requests had their prefix evicted and recomputed ~18k
+  tokens of prefill.
+- **GPU KV Usage Percentage** spikes toward 90% as contexts grow. Round-robin
+  makes *both* GPUs cache *every* session, so the cache fills and evicts.
+- **Number of Running / Pending Requests** shows load spread evenly across the
+  two engines (round-robin's one strength) and queueing behind long prefills.
+
 ## Repo layout
 
 ```
