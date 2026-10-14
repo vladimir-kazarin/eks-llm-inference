@@ -1,0 +1,2 @@
+# Normally set by scripts/up.sh from your current public IP.
+allowed_cidrs = ["203.0.113.10/32"]
