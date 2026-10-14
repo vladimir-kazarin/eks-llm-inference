@@ -27,6 +27,19 @@ module "eks" {
       max_size       = 2
       desired_size   = 2
       labels         = { workload = "system" }
+      # The production-stack router image bundles torch CUDA libs (several GB);
+      # the AMI's default 20 GiB root fills up and the node goes DiskPressure.
+      block_device_mappings = {
+        xvda = {
+          device_name = "/dev/xvda"
+          ebs = {
+            volume_size           = 60
+            volume_type           = "gp3"
+            encrypted             = true
+            delete_on_termination = true
+          }
+        }
+      }
     }
 
     gpu = {
