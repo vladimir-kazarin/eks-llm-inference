@@ -35,7 +35,8 @@ spec:
         namespace: llm
       syncPolicy:
         automated: { prune: true, selfHeal: true }
-        syncOptions: [CreateNamespace=true]
+        # ServiceMonitors apply once kube-prometheus-stack installs the CRD; don't block engines on it.
+        syncOptions: [CreateNamespace=true, SkipDryRunOnMissingResource=true]
         retry:
           # ServiceMonitor CRD and LB controller webhook may not exist yet on first sync.
           limit: 20

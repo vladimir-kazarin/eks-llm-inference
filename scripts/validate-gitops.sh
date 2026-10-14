@@ -25,6 +25,10 @@ kubeconform -strict -summary -schema-location default -schema-location "$CRD_SCH
 grep -A1 -- '- "--routing-logic"' "$TMP/llm.yaml" | grep -q "\"$strategy\"" || fail "router not rendered with --routing-logic $strategy"
 grep -A1 -- '- "--session-key"' "$TMP/llm.yaml" | grep -q 'x-session-id' || fail "router session key missing"
 grep -q -- '- "--enable-prefix-caching"' "$TMP/llm.yaml" || fail "engine prefix caching not enabled"
+grep -q -- '- "--enable-prompt-tokens-details"' "$TMP/llm.yaml" || fail "engine must report cached_tokens (--enable-prompt-tokens-details)"
+# 2 replicas on exactly 2 GPUs: a surge rollout would leave new pods Pending forever.
+awk '/name: "llm-qwen3-4b-deployment-vllm"/{f=1} f&&/strategy:/{getline; print; exit}' "$TMP/llm.yaml" | grep -q 'type: Recreate' || fail "engine Deployment must use Recreate strategy"
+grep -q 'SkipDryRunOnMissingResource=true' "$ROOT/gitops/apps/llm-stack.yaml" || fail "llm-stack must not block on missing ServiceMonitor CRD"
 grep -q 'image: "vllm/vllm-openai:v0.31.0"' "$TMP/llm.yaml" || fail "engine image not pinned to v0.31.0"
 if grep -q 'runtimeClassName' "$TMP/llm.yaml"; then fail "runtimeClassName must not be set"; fi
 if grep -qE -- '- "--(runner|convert|tensor-parallel-size)"' "$TMP/llm.yaml"; then fail "chart example defaults leaked into engine args"; fi

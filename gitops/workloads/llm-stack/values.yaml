@@ -18,6 +18,8 @@ servingEngineSpec:
         dtype: bfloat16
         maxNumSeqs: 32
         gpuMemoryUtilization: 0.90
+        # Off by default in vLLM; without it usage.prompt_tokens_details.cached_tokens is absent.
+        extraArgs: ["--enable-prompt-tokens-details"]
       lmcacheConfig:
         enabled: false
       nodeSelectorTerms:
@@ -39,6 +41,9 @@ servingEngineSpec:
       port: 8000
   serviceMonitor:
     enabled: true
+  # 2 replicas on exactly 2 GPUs: surge pods could never schedule, so replace in place.
+  strategy:
+    type: Recreate
 
 routerSpec:
   repository: lmcache/lmstack-router
