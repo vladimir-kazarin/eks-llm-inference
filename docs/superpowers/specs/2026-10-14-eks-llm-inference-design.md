@@ -1,7 +1,7 @@
 # EKS LLM Inference — Design Spec
 
 Date: 2026-10-14
-Status: Draft (awaiting review)
+Status: Approved 2026-10-14
 
 ## 1. Intent
 
@@ -167,3 +167,9 @@ Typical 2–4 h session ≈ $5–10. Budget alert in `bootstrap/` (threshold var
 - g5 capacity may be unavailable in an AZ → node group spans both AZs; runbook covers switching region.
 - production-stack chart value names must be verified against the pinned chart version during implementation.
 - The serving replica may not be exposed in a response header by the router; demo falls back to per-engine metrics.
+
+### Deviations during implementation
+
+- EBS CSI add-on dropped: nothing uses PVCs (Prometheus storage is ephemeral per session).
+- NLB source ranges are set with the `service.beta.kubernetes.io/load-balancer-source-ranges`
+  annotation, because chart vllm-stack 0.1.13 exposes no `loadBalancerSourceRanges` value.
