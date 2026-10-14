@@ -1,0 +1,16 @@
+# Each accepted finding needs: id, paths, statement (why it's acceptable here).
+misconfigurations:
+  - id: AWS-0040
+    statement: >-
+      EKS public API endpoint is intentional for laptop-driven sessions; access is
+      restricted to allowed_cidrs (caller's /32), and 0.0.0.0/0 is rejected by validation.
+  - id: AWS-0104
+    statement: >-
+      Node egress to the internet (via a single NAT) is required to pull container images
+      and Hugging Face model weights; no inbound exposure. VPC endpoints are out of scope.
+  - id: AWS-0132
+    paths: ["terraform/bootstrap/main.tf"]
+    statement: >-
+      State bucket uses SSE-S3 (AES256) with versioning, public access blocked and
+      owner-enforced ACLs; a customer-managed KMS key adds cost/complexity with no
+      additional benefit for a single-user portfolio project.

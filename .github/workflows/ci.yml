@@ -1,0 +1,68 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: hashicorp/setup-terraform@v4.0.1
+        with:
+          terraform_version: 1.15.8
+      - uses: terraform-linters/setup-tflint@v6.3.2
+      - run: terraform fmt -check -recursive terraform
+      - run: |
+          for d in terraform/bootstrap terraform/infra; do
+            terraform -chdir=$d init -backend=false -input=false
+            terraform -chdir=$d validate
+          done
+      - run: tflint --init --config "$PWD/.tflint.hcl" && tflint --recursive --config "$PWD/.tflint.hcl"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+  security:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          trivyignores: .trivyignore.yaml
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+  gitops:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: azure/setup-helm@v4
+        with:
+          version: v4.2.3
+      - name: install kubeconform
+        run: |
+          curl -fsSL https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz \
+            | sudo tar -xz -C /usr/local/bin kubeconform
+      - run: scripts/validate-gitops.sh
+
+  python:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run pytest -q
+
+  scripts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - run: shellcheck scripts/*.sh scripts/tests/*.sh
+      - run: bash scripts/tests/test_lib.sh && bash scripts/tests/test_down_refuses_with_lb.sh
